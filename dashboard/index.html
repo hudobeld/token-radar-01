@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — pre-token protocols ranked by implied value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="pulse" aria-hidden="true"></span>
+    <div>
+      <h1>TOKEN RADAR</h1>
+      <p class="tag">Which pre-token protocol is worth farming next — and what to do about it.</p>
+    </div>
+  </div>
+  <div class="meta" id="meta"></div>
+</header>
+
+<nav class="tabs" aria-label="Views">
+  <button type="button" class="tab active" data-tab="board" id="tab-board">Board</button>
+  <button type="button" class="tab" data-tab="live" id="tab-live">Live tokens</button>
+  <button type="button" class="tab" data-tab="model" id="tab-model">Model &amp; method</button>
+</nav>
+
+<section id="view-board" class="view">
+  <div class="stats" id="stats"></div>
+  <div class="controls">
+    <label class="ctl">Search <input id="q" type="search" placeholder="Protocol or slug…" autocomplete="off"></label>
+    <label class="ctl">Category <select id="cat"><option value="">All categories</option></select></label>
+    <label class="ctl">Chain <select id="chain"><option value="">All chains</option></select></label>
+    <label class="ctl">Min TVL <select id="mintvl">
+      <option value="0" selected>Any</option>
+      <option value="5000000">$5M+</option>
+      <option value="50000000">$50M+</option>
+      <option value="100000000">$100M+</option>
+      <option value="500000000">$500M+</option>
+      <option value="1000000000">$1B+</option>
+    </select></label>
+    <label class="ctl check"><input id="watch" type="checkbox"> Watchlist only</label>
+    <label class="ctl">Sort <select id="sort">
+      <option value="rank">Implied value ↓</option>
+      <option value="tvl">TVL ↓</option>
+      <option value="growth">7d change ↓</option>
+      <option value="age">Age ↓</option>
+      <option value="name">Name A–Z</option>
+    </select></label>
+  </div>
+  <p class="count" id="count"></p>
+  <div class="tablewrap">
+    <table id="board">
+      <thead><tr>
+        <th data-k="rank">#</th>
+        <th data-k="name">Protocol</th>
+        <th data-k="category">Category</th>
+        <th data-k="chain">Main chain</th>
+        <th data-k="tvl" class="num">TVL</th>
+        <th data-k="growth" class="num">7d</th>
+        <th data-k="age" class="num">Age</th>
+        <th data-k="implied" class="num">Implied value</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <button type="button" class="more" id="more">Show more</button>
+</section>
+
+<section id="view-live" class="view" hidden>
+  <p class="lede">These protocols already have a token that trades. The values below are the market's own
+  market caps from the snapshot — <strong>not</strong> implied values — shown so the board's pre-token
+  rows are never confused with live tokens.</p>
+  <div class="tablewrap">
+    <table id="livetab">
+      <thead><tr><th>#</th><th>Protocol</th><th>Category</th><th>Main chain</th><th class="num">TVL</th><th class="num">Market cap</th><th class="num">7d</th></tr></thead>
+      <tbody id="liverows"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="view-model" class="view" hidden>
+  <h2>How the radar scores a protocol</h2>
+  <p class="lede">Every number below is computed at run time from the sealed snapshot itself. No protocol
+  name is ever special-cased, and nothing is typed in by hand.</p>
+  <div class="formula">implied value = TVL × category multiple × growth multiplier × maturity multiplier</div>
+  <ul class="rules">
+    <li><strong>Category multiple</strong> — the median market-cap / TVL of the live-token protocols in
+      the same category. A category with fewer than 3 live samples falls back to the global median.
+      Clamped to 0.05 – 1.50.</li>
+    <li><strong>Growth multiplier</strong> — 1 + clamp(7d change, −60%, +120%) ÷ 100 × 0.5.
+      A protocol with no reported 7d change counts as 0%.</li>
+    <li><strong>Maturity multiplier</strong> — 0.6 + min(age in days, 1095) ÷ 1095 × 0.4, so a protocol
+      tracked for 3 years scores 1.00 and a brand-new one 0.60. Unknown age counts as 365 days.</li>
+  </ul>
+  <h3>Category multiples from this snapshot</h3>
+  <div class="tablewrap"><table id="mults">
+    <thead><tr><th>Category</th><th class="num">Multiple</th><th class="num">Live sample</th><th>Note</th></tr></thead>
+    <tbody id="multrows"></tbody>
+  </table></div>
+  <h3>How to read the board</h3>
+  <p>Rank 1 is the largest implied value. A <span class="badge">WATCH</span> badge marks the snapshot's
+  40-protocol watchlist (TVL $50M+, records no token, not a wrapped, staked or bridged product).
+  The board also ranks 158 further pre-token protocols the watchlist leaves out — 138 below the
+  $50M floor and 20 above it. A further 91 pre-token protocols are left out entirely: the board
+  applies the watchlist's own rule to every row, so bridged, staked, wrapped, versioned and
+  exchange-branded products are excluded wherever they sit. Click any row for its model breakdown
+  and its six farm steps.</p>
+  <h3>Disclaimer</h3>
+  <p class="fine">Implied value is this dashboard's own claim, derived from the snapshot's figures; it is
+  not a price, a prediction, or a promise that a token will ever be issued, or when. The snapshot is
+  DefiLlama's record as fetched on the snapshot date, not proof: a protocol listed as recording no token
+  may still have a token its record does not carry. One limit of the exclusion above: each snapshot record
+  carries ten fields and no parent-protocol field, so a product of another protocol whose own record does
+  not name it as one cannot be excluded automatically — the rule can only catch what the record shows.
+  Farm steps are generic actions derived from a protocol's category, main chain, TVL and age; they are not
+  financial advice. Never pay to claim an airdrop, and only ever follow links the protocol itself publishes.</p>
+</section>
+
+<aside id="detail" class="drawer" hidden aria-label="Protocol detail">
+  <button type="button" class="close" id="close" aria-label="Close detail">×</button>
+  <div id="detailbody"></div>
+</aside>
+
+<footer class="foot" id="foot"></footer>
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
